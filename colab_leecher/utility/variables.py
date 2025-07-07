@@ -1,3 +1,6 @@
+# copyright 2023 © Xron Trix | https://github.com/Xrontrix10
+
+
 from time import time
 from datetime import datetime
 from pyrogram.types import Message
@@ -9,8 +12,9 @@ class BOT:
     class Setting:
         stream_upload = "Media"
         convert_video = "Yes"
-        convert_quality = "High"
+        convert_quality = "Low"
         caption = "Monospace"
+        split_video = "Split Videos"
         prefix = ""
         suffix = ""
         thumbnail = False
@@ -18,7 +22,8 @@ class BOT:
     class Options:
         stream_upload = True
         convert_video = True
-        convert_quality = True
+        convert_quality = False
+        is_split = True
         caption = "code"
         video_out = "mp4"
         custom_name = ""
@@ -83,7 +88,7 @@ class Paths:
 
 
 class Messages:
-    caution_msg = "\n\n<i>💖 When Talha's bot Doin This, Do Something Else ! <b>Because, Time Is Precious ✨</b></i>"
+    caution_msg = "\n\n<i>💖 When Talha's bot Doin This, Do Something Else! <b>Because, Time Is Precious ✨</b></i>"
     download_name = ""
     task_msg = ""
     status_head = f"<b>📥 DOWNLOADING » </b>\n"
