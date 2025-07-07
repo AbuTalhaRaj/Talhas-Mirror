@@ -215,8 +215,8 @@ async def cancelTask(Reason: str):
                                 url="https://t.me/talhasmovie_request_bot",
                             ),
                             InlineKeyboardButton(  # Opens a web URL
-                                "",
-                                url="",
+                                "Group 💬",
+                                url="https://t.me/talhasmovie_request_bot",
                             ),
                         ],
                     ]
@@ -227,7 +227,7 @@ async def cancelTask(Reason: str):
 async def SendLogs(is_leech: bool):
     global Transfer, Messages
     final_text = f"<b>☘️ File Count:</b>  <code>{len(Transfer.sent_file)}</code>\n\n<b>📜 Logs:</b>\n"
-    l_ink = "⌬─────[「 Talha's bot 」](https://t.me/talhasmovie_request_bot)─────⌬"
+    l_ink = "⌬─────[「 Colab Usage 」](https://colab.research.google.com/drive/12hdEqaidRZ8krqj7rpnyDzg1dkKmvdvp)─────⌬"
 
     if is_leech:
         file_count = (
@@ -260,18 +260,18 @@ async def SendLogs(is_leech: bool):
                 [
                     [
                         InlineKeyboardButton(
-                            "",
-                            url="",
+                            "Git Repo 🪲",
+                            url="https://t.me/talhasmovie_request_bot",
                         ),
                     ],
                     [
                         InlineKeyboardButton(  # Opens a web URL
-                             "Support 📣",
-                                url="https://t.me/talhasmovie_request_bot",
+                            "Support 📣",
+                            url="https://t.me/talhasmovie_request_bot",
                         ),
                         InlineKeyboardButton(  # Opens a web URL
-                            "",
-                                url="",
+                            "Group 💬",
+                            url="https://t.me/talhasmovie_request_bot",
                         ),
                     ],
                 ]
