@@ -1,4 +1,5 @@
 import os
+import json
 import GPUtil
 import shutil
 import logging
@@ -11,6 +12,7 @@ from moviepy.editor import VideoFileClip as VideoClip
 from colab_leecher.utility.variables import BOT, MSG, BotTimes, Paths, Messages
 from colab_leecher.utility.helper import (
     getSize,
+    fileType,
     keyboard,
     multipartArchive,
     sizeUnit,
@@ -124,7 +126,12 @@ async def sizeChecker(file_path, remove: bool):
         ):
             await splitArchive(file_path, max_size)
         else:
-            await archive(file_path, True, remove)
+            f_type = fileType(file_path)
+            if f_type == "video" and BOT.Options.is_split:
+                # TODO: Store the size in a constant variable
+                await splitVideo(file_path, 2000, remove)
+            else:
+                await archive(file_path, True, remove)
             await sleep(2)
         return True
     else:
@@ -136,7 +143,7 @@ async def archive(path, is_split, remove: bool):
     dir_p, p_name = ospath.split(path)
     r = "-r" if ospath.isdir(path) else ""
     if is_split:
-        split = "-s 40000m" if len(BOT.Options.zip_pswd) == 0 else "-v40000m"
+        split = "-s 2000m" if len(BOT.Options.zip_pswd) == 0 else "-v2000m"
     else:
         split = ""
     if len(BOT.Options.custom_name) != 0:
@@ -154,10 +161,11 @@ async def archive(path, is_split, remove: bool):
     else:
         cmd = f'7z a -mx=0 -tzip -p{BOT.Options.zip_pswd} {split} "{Paths.temp_zpath}/{name}.zip" {path}'
     proc = subprocess.Popen(cmd, shell=True)
-    total = sizeUnit(getSize(path))
+    total_size = getSize(path)
+    total_in_unit = sizeUnit(total_size)
     while proc.poll() is None:
         speed_string, eta, percentage = speedETA(
-            BotTimes.task_start, getSize(Paths.temp_zpath), getSize(path)
+            BotTimes.task_start, getSize(Paths.temp_zpath), total_size
         )
         await status_bar(
             Messages.status_head,
@@ -165,7 +173,7 @@ async def archive(path, is_split, remove: bool):
             percentage,
             getTime(eta),
             sizeUnit(getSize(Paths.temp_zpath)),
-            total,
+            total_in_unit,
             "Xr-Zipp 🔒",
         )
         await sleep(1)
@@ -283,3 +291,55 @@ async def splitArchive(file_path, max_size):
             # Get next chunk
             chunk = f.read(max_size)
             i += 1  # Increment chunk counter
+
+
+async def splitVideo(file_path, max_size, remove: bool):
+    global Paths, BOT, MSG, Messages
+    _, filename = ospath.split(file_path)
+    just_name, extension = ospath.splitext(filename)
+
+    # FFmpeg command to get video information in JSON format
+    cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file_path]
+
+    bitrate = None
+    try:
+        # Run the command and get output
+        output = subprocess.check_output(cmd)
+        video_info = json.loads(output)
+        # Get bitrate in bits per second
+        bitrate = float(video_info["format"]["bit_rate"])
+    except subprocess.CalledProcessError:
+        logging.error("Error: Could not get video bitrate")
+        bitrate = 1000
+
+    # Convert target size from MB to bits
+    target_size_bits = max_size * 8 * 1024 * 1024
+
+    # Calculate duration in seconds
+    duration = int(target_size_bits / bitrate)
+
+    cmd = f'ffmpeg -i {file_path} -c copy -f segment -segment_time {duration} -reset_timestamps 1 "{Paths.temp_zpath}/{just_name}.part%03d{extension}"'
+
+    Messages.status_head = f"<b>✂️ SPLITTING » </b>\n\n<code>{filename}</code>\n"
+    BotTimes.task_start = datetime.now()
+
+    proc = subprocess.Popen(cmd, shell=True)
+    total_size = getSize(file_path)
+    total_in_unit = sizeUnit(total_size)
+    while proc.poll() is None:
+        speed_string, eta, percentage = speedETA(
+            BotTimes.task_start, getSize(Paths.temp_zpath), total_size
+        )
+        await status_bar(
+            Messages.status_head,
+            speed_string,
+            percentage,
+            getTime(eta),
+            sizeUnit(getSize(Paths.temp_zpath)),
+            total_in_unit,
+            "Xr-Split ✂️",
+        )
+        await sleep(1)
+
+    if remove:
+        os.remove(file_path)
